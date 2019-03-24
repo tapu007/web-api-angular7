@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Serialization;
 using WebApi.DatabaseContext.DatabaseContext;
 
 namespace WebApiAngular7App
@@ -27,7 +28,16 @@ namespace WebApiAngular7App
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<PaymentDatabaseContext>(options => options.UseSqlServer(Configuration.GetConnectionString("PaymentDatabaseContext")));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddCors();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .AddJsonOptions(options=> {
+                    var resolver = options.SerializerSettings.ContractResolver;
+                    if (resolver !=null)
+                    {
+                        (resolver as DefaultContractResolver).NamingStrategy = null;
+                    }
+
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,6 +48,12 @@ namespace WebApiAngular7App
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors(options => options.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+
+
+            );
             app.UseMvc();
         }
     }
